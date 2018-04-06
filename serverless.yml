@@ -1,0 +1,88 @@
+
+
+service: takehome
+
+custom:
+  bucket: minidrop
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: test
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "*"
+
+functions:
+  upload:
+    handler: functions/upload.upload
+    events:
+      - s3:
+        bucket: ${self:custom.bucket}
+        event: s3:ObjectCreated:*
+  get:
+    handler: functions/get.get
+    events:
+      - http:
+          path: functions/{id}
+          method: get
+          cors: true
+  list:
+    handler: functions/list.list
+    events:
+      - http:   
+          path: functions
+          method: get
+          cors: true   
+  create:
+    handler: functions/create.create
+    events:
+      - http:
+          path: functions
+          method: post
+          cors: true
+  update:
+    handler: functions/update.update
+    events:
+      - http:
+          path: functions
+          method: put
+          cors: true
+
+resources:  
+  Resources:
+    musicTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: music
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    playlistTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: playlist
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
